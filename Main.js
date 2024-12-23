@@ -44,7 +44,7 @@ const App = () => {
     },
     {
       id: '2',
-      name: 'McDonald',
+      name: 'Transfer From SAMSON CHIMARAOKE CHIZOR (OPAY)',
       amount: '+₦800.00',
       date: '20-01-2023, 06:00',
       status: 'Completed',
@@ -96,7 +96,7 @@ const App = () => {
       <View style={styles.header}>
         <View style={styles.userSection}>
           <Image
-            source={require('./assets/favicon.png')}
+            source={require('./assets/avatar.png')}
             style={styles.userImage}
           />
           <View>
@@ -183,25 +183,31 @@ const App = () => {
         )}
       />
 
-         {/* Bottom Navigation */}
-         <View style={styles.bottomNav}>
+            {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
         <TouchableOpacity style={styles.navButton}>
-          <Ionicons name="home" size={24} color="#fff" />
-          <Text style={styles.navButtonText}>Home</Text>
+          <Ionicons name="home" size={24} color="#FFA500" /> {/* Orange for active */}
+          <Text style={[styles.navButtonText, { color: '#FFA500' }]}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navButton}>
-          <Ionicons name="receipt-outline" size={24} color="#fff" />
-          <Text style={styles.navButtonText}>Bills</Text>
+          <Ionicons name="receipt-outline" size={24} color="#BBBBBB" /> {/* Dull white */}
+          <Text style={[styles.navButtonText, { color: '#BBBBBB' }]}>Bills</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navButton}>
-          <Ionicons name="calendar-outline" size={24} color="#fff" />
-          <Text style={styles.navButtonText}>Events</Text>
+          <Ionicons name="trophy-outline" size={24} color="#BBBBBB" /> {/* Dull white */}
+          <Text style={[styles.navButtonText, { color: '#BBBBBB' }]}>Rewards</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navButton}>
-          <Ionicons name="person-outline" size={24} color="#fff" />
-          <Text style={styles.navButtonText}>Profile</Text>
+          <Ionicons name="swap-horizontal-outline" size={24} color="#BBBBBB" /> {/* Dull white */}
+          <Text style={[styles.navButtonText, { color: '#BBBBBB' }]}>Exchanges</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton}>
+          <Ionicons name="person-outline" size={24} color="#BBBBBB" /> {/* Dull white */}
+          <Text style={[styles.navButtonText, { color: '#BBBBBB' }]}>Profile</Text>
         </TouchableOpacity>
       </View>
+
+
     </View>
   );
 };
@@ -388,8 +394,7 @@ const styles = StyleSheet.create({
   bottomNav: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    alignItems: 'center',
-    position: 'absolute',
+ 
     bottom: 0,
     width: '100%',
     backgroundColor: '#1C1C1E',
