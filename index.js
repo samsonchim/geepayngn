@@ -1,5 +1,8 @@
-import { AppRegistry } from 'react-native';
-import AppNavigator from './AppNavigator';
-import { name as appName } from './app.json';
+import { registerRootComponent } from 'expo';
 
-AppRegistry.registerComponent(appName, () => AppNavigator);
+import AppNavigator from './AppNavigator'; // Import your navigation logic
+
+// registerRootComponent calls AppRegistry.registerComponent('main', () => AppNavigator);
+// It also ensures that whether you load the app in Expo Go or in a native build,
+// the environment is set up appropriately
+registerRootComponent(AppNavigator);

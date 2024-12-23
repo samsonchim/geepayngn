@@ -13,7 +13,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
-const App = () => {
+const MainApp = () => {
   const [isBalanceBlurred, setIsBalanceBlurred] = useState(false);
   const [blurValue] = useState(new Animated.Value(0));
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
@@ -409,4 +409,4 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
 });
-export default App;
+export default MainApp;
