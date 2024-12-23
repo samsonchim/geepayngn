@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Banking App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .mobile-app {
+      background-color: #fff;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      width: 320px;
+      height: 680px;
+      position: relative;
+    }
+
+    .header {
+      background-color: #007aff;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      color: #fff;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .header .icons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .header .icons i {
+      font-size: 18px;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .balance {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .balance h3 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .balance .amount {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .cards {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background-color: #f0f0f0;
+      border-radius: 10px;
+      padding: 10px;
+      width: 48%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .card h4 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .card .amount {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .transactions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .transaction {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .transaction .details {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .transaction .details i {
+      font-size: 24px;
+    }
+
+    .transaction .details h4 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .transaction .amount {
+      font-size: 16px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="mobile-app">
+      <div class="header">
+        <h2>Good Morning, Sajjad Rahman</h2>
+        <div class="icons">
+          <i class="fas fa-search"></i>
+          <i class="fas fa-ellipsis-v"></i>
+        </div>
+      </div>
+      <div class="content">
+        <div class="balance">
+          <h3>Total Balance</h3>
+          <div class="amount">$67,323.78</div>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <h4>My Cards</h4>
+            <div class="amount">$60,890.00</div>
+          </div>
+          <div class="card">
+            <h4>PayPal</h4>
+            <div class="amount">$450.00</div>
+          </div>
+        </div>
+        <div class="transactions">
+          <div class="transaction">
+            <div class="details">
+              <i class="fas fa-shopping-cart"></i>
+              <h4>Amazon</h4>
+            </div>
+            <div class="amount">-$53.17</div>
+          </div>
+          <div class="transaction">
+            <div class="details">
+              <i class="fas fa-dollar-sign"></i>
+              <h4>Salary</h4>
+            </div>
+            <div class="amount">+$5,000.00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Include Font Awesome icons -->
+  <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
+</body>
+</html>
