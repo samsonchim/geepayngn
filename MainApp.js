@@ -13,7 +13,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
-const MainApp = () => {
+const MainApp = ({ navigation }) => {
   const [isBalanceBlurred, setIsBalanceBlurred] = useState(false);
   const [blurValue] = useState(new Animated.Value(0));
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
@@ -34,7 +34,8 @@ const MainApp = () => {
       date: '20-01-2023, 06:00',
       status: 'Completed',
       type: 'outgoing',
-    }, {
+    },
+    {
       id: '6',
       name: 'Transfer to IBE JENIFER',
       amount: '-₦1,200.00',
@@ -133,7 +134,9 @@ const MainApp = () => {
       {/* Action Buttons */}
       <View style={styles.actionButtonsContainer}>
         <View style={styles.actionButtonWrapper}>
-          <TouchableOpacity style={styles.transferButton}>
+          <TouchableOpacity
+            style={styles.transferButton}
+            onPress={() => navigation.navigate('Transfer')} >
             <Ionicons name="swap-horizontal" size={18} color="#fff" />
             <Text style={styles.actionButtonText}>Transfer</Text>
           </TouchableOpacity>
@@ -183,7 +186,7 @@ const MainApp = () => {
         )}
       />
 
-            {/* Bottom Navigation */}
+      {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
         <TouchableOpacity style={styles.navButton}>
           <Ionicons name="home" size={24} color="#FFA500" /> {/* Orange for active */}
@@ -206,13 +209,9 @@ const MainApp = () => {
           <Text style={[styles.navButtonText, { color: '#BBBBBB' }]}>Profile</Text>
         </TouchableOpacity>
       </View>
-
-
     </View>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   container: {

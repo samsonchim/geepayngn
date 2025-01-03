@@ -2,7 +2,9 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import PasscodeScreen from './PasscodeScreen';
-import MainApp from './MainApp'; // Ensure this is your original MainApp component
+import MainApp from './MainApp'; 
+import Transfer from './Transfer';
+import Amount from './Amount';
 
 const Stack = createStackNavigator();
 
@@ -18,6 +20,16 @@ const AppNavigator = () => {
         <Stack.Screen
           name="MainApp"
           component={MainApp}
+          options={{ headerShown: false }}
+        />
+         <Stack.Screen
+          name="Transfer"
+          component={Transfer}
+          options={{ headerShown: false }}
+        />
+         <Stack.Screen
+          name="Amount"
+          component={Amount}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
