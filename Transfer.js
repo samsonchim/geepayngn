@@ -14,7 +14,7 @@ const Transfer = ({ navigation }) => {
     }
 
     try {
-      const response = await fetch('https://b78d-102-88-84-248.ngrok-free.app/backend/validate.php', {
+      const response = await fetch('https://737c-197-210-227-23.ngrok-free.app/backend/validate.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
