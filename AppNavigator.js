@@ -5,6 +5,7 @@ import PasscodeScreen from './PasscodeScreen';
 import MainApp from './MainApp'; 
 import Transfer from './Transfer';
 import Amount from './Amount';
+import Success from './Success';
 
 const Stack = createStackNavigator();
 
@@ -30,6 +31,11 @@ const AppNavigator = () => {
          <Stack.Screen
           name="Amount"
           component={Amount}
+          options={{ headerShown: false }}
+        />
+         <Stack.Screen
+          name="Success"
+          component={Success}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
