@@ -1,34 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Vibration,
+  Alert,
 } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons'; // Make sure Ionicons is included here
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ApiService from './services/ApiService';
 
 const PasscodeScreen = ({ navigation }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const apiService = ApiService.getInstance();
+
+  useEffect(() => {
+    // Initialize API service from storage
+    initializeApiService();
+  }, []);
+
+  const initializeApiService = async () => {
+    await apiService.initializeFromStorage();
+    
+    // Check if user is already authenticated
+    if (apiService.isAuthenticated()) {
+      const user = apiService.getCurrentUser();
+      console.log('User already authenticated:', user?.first_name);
+    }
+  };
 
   const handleKeyPress = (key) => {
     setError(''); // Clear error on new input
 
-    if (pin.length < 6) {
+    if (pin.length < 4) { // Changed to 4 digits for passcode
       setPin((prev) => prev + key);
     }
 
-    if (pin.length + 1 === 6) {
+    if (pin.length + 1 === 4) {
       setTimeout(() => {
-        if (pin + key === '131111') {
-          navigation.replace('MainApp');
-        } else {
-          Vibration.vibrate();
-          setPin('');
-          setError('Incorrect PIN'); // Display error
-        }
+        verifyPasscode(pin + key);
       }, 200);
+    }
+  };
+
+  const verifyPasscode = async (enteredPin) => {
+    setLoading(true);
+    
+    try {
+      // For demo, use a default email or get from storage
+      const savedEmail = await AsyncStorage.getItem('userEmail');
+      const email = savedEmail || 'samson@geepayngn.com'; // Default for testing
+      
+      const response = await apiService.verifyPasscode(email, enteredPin);
+      
+      if (response.status === 'success') {
+        // Save email for future use
+        await AsyncStorage.setItem('userEmail', email);
+        
+        console.log('Login successful:', response.data.user);
+        navigation.replace('MainApp');
+      } else {
+        Vibration.vibrate();
+        setPin('');
+        setError('Incorrect passcode');
+      }
+    } catch (error) {
+      console.error('Passcode verification error:', error);
+      Vibration.vibrate();
+      setPin('');
+      setError('Invalid passcode. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,7 +87,7 @@ const PasscodeScreen = ({ navigation }) => {
       <Text style={styles.title}>Enter Passcode</Text>
       {error ? <Text style={styles.errorText}>{error}</Text> : null} {/* Display error message */}
       <View style={styles.passcodeContainer}>
-        {[...Array(6)].map((_, index) => (
+        {[...Array(4)].map((_, index) => (
           <View
             key={index}
             style={[styles.passcodeDot, index < pin.length && styles.filledDot]}

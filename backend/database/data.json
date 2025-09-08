@@ -1,0 +1,172 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "first_name": "Samson",
+      "last_name": "Chimaraoke",
+      "email": "samson@geepayngn.com",
+      "phone": "+2348123456789",
+      "password_hash": "$2a$10$rQ8K6Bb.a5Y6RzY5MvW/ZOpvXn.X1p2jK9m6X.BzU7cI4MzRuW1nS",
+      "passcode_hash": "$2a$10$rQ8K6Bb.a5Y6RzY5MvW/ZOpvXn.X1p2jK9m6X.BzU7cI4MzRuW1nS",
+      "account_number": "8006566000",
+      "account_balance": 800656.60,
+      "bvn": "12345678901",
+      "address": "No. 123 Victoria Island, Lagos, Nigeria",
+      "is_verified": true,
+      "created_at": "2023-01-15T10:00:00Z",
+      "updated_at": "2023-01-15T10:00:00Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": 1,
+      "transaction_id": "TXN_001_2023",
+      "sender_id": 1,
+      "receiver_id": null,
+      "transaction_type": "transfer",
+      "amount": 1200.00,
+      "total_amount": 1200.00,
+      "status": "completed",
+      "description": "Transfer to IBE JENIFER",
+      "recipient_name": "IBE JENIFER",
+      "recipient_account": "7234567890",
+      "recipient_bank": "Access Bank",
+      "completed_at": "2023-01-20T06:00:00Z",
+      "created_at": "2023-01-20T06:00:00Z"
+    },
+    {
+      "id": 2,
+      "transaction_id": "TXN_002_2023",
+      "sender_id": null,
+      "receiver_id": 1,
+      "transaction_type": "deposit",
+      "amount": 800.00,
+      "total_amount": 800.00,
+      "status": "completed",
+      "description": "Transfer From SAMSON CHIMARAOKE CHIZOR (OPAY)",
+      "recipient_name": "SAMSON CHIMARAOKE CHIZOR",
+      "recipient_account": "8006566000",
+      "recipient_bank": "GeePay",
+      "completed_at": "2023-01-20T06:00:00Z",
+      "created_at": "2023-01-20T06:00:00Z"
+    },
+    {
+      "id": 3,
+      "transaction_id": "TXN_003_2023",
+      "sender_id": null,
+      "receiver_id": 1,
+      "transaction_type": "deposit",
+      "amount": 1500.00,
+      "total_amount": 1500.00,
+      "status": "completed",
+      "description": "Netflix Subscription Refund",
+      "recipient_name": "Netflix",
+      "recipient_account": "8006566000",
+      "recipient_bank": "GeePay",
+      "completed_at": "2023-01-20T06:00:00Z",
+      "created_at": "2023-01-20T06:00:00Z"
+    },
+    {
+      "id": 4,
+      "transaction_id": "TXN_004_2023",
+      "sender_id": 1,
+      "receiver_id": null,
+      "transaction_type": "transfer",
+      "amount": 2500.00,
+      "total_amount": 2525.00,
+      "status": "completed",
+      "description": "Transfer to JOHN DOE",
+      "recipient_name": "JOHN DOE",
+      "recipient_account": "9876543210",
+      "recipient_bank": "GTBank",
+      "completed_at": "2023-01-19T14:30:00Z",
+      "created_at": "2023-01-19T14:30:00Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "title": "Welcome to GeePay!",
+      "message": "Your account has been successfully created. Start enjoying seamless banking.",
+      "type": "general",
+      "is_read": false,
+      "created_at": "2023-01-15T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "user_id": 1,
+      "title": "Transfer Completed",
+      "message": "You successfully sent ₦1,200 to IBE JENIFER",
+      "type": "transaction",
+      "is_read": false,
+      "created_at": "2023-01-20T06:00:00Z"
+    },
+    {
+      "id": 3,
+      "user_id": 1,
+      "title": "Money Received",
+      "message": "You received ₦800 from SAMSON CHIMARAOKE CHIZOR (OPAY)",
+      "type": "transaction",
+      "is_read": true,
+      "created_at": "2023-01-20T06:00:00Z"
+    }
+  ],
+  "banks": [
+    {
+      "id": 1,
+      "bank_name": "Access Bank",
+      "bank_code": "044"
+    },
+    {
+      "id": 2,
+      "bank_name": "Guaranty Trust Bank",
+      "bank_code": "058"
+    },
+    {
+      "id": 3,
+      "bank_name": "Zenith Bank",
+      "bank_code": "057"
+    },
+    {
+      "id": 4,
+      "bank_name": "First Bank of Nigeria",
+      "bank_code": "011"
+    },
+    {
+      "id": 5,
+      "bank_name": "United Bank for Africa",
+      "bank_code": "033"
+    },
+    {
+      "id": 6,
+      "bank_name": "Fidelity Bank",
+      "bank_code": "070"
+    },
+    {
+      "id": 7,
+      "bank_name": "Union Bank of Nigeria",
+      "bank_code": "032"
+    },
+    {
+      "id": 8,
+      "bank_name": "Sterling Bank",
+      "bank_code": "232"
+    },
+    {
+      "id": 9,
+      "bank_name": "Opay",
+      "bank_code": "999992"
+    },
+    {
+      "id": 10,
+      "bank_name": "Kuda Bank",
+      "bank_code": "090267"
+    },
+    {
+      "id": 11,
+      "bank_name": "PalmPay",
+      "bank_code": "999991"
+    }
+  ]
+}

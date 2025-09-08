@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';  // Import AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ApiService from './services/ApiService';
 
 const Transfer = ({ navigation }) => {
   const [accountNumber, setAccountNumber] = useState('');
@@ -8,6 +9,24 @@ const Transfer = ({ navigation }) => {
   const [accountName, setAccountName] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [banks, setBanks] = useState([]);
+
+  const apiService = ApiService.getInstance();
+
+  useEffect(() => {
+    loadBanks();
+  }, []);
+
+  const loadBanks = async () => {
+    try {
+      const response = await apiService.getBanks();
+      if (response.status === 'success') {
+        setBanks(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load banks:', error);
+    }
+  };
 
   // Function to validate account and save account details
   const validateAccount = async () => {
@@ -16,49 +35,37 @@ const Transfer = ({ navigation }) => {
       return;
     }
 
-    const payload = JSON.stringify({ account_number: accountNumber, bank_code: bankCode });
-    console.log("🔍 Request Payload:", payload);
+    if (accountNumber.length !== 10) {
+      Alert.alert('Error', 'Please enter a valid 10-digit account number');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await fetch('https://7d18-197-210-226-253.ngrok-free.app/backend/validate.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: payload,
-      });
+      const response = await apiService.validateAccount(accountNumber, bankCode);
 
-      const textResponse = await response.text();
-      console.log("📥 Raw Response:", textResponse);
+      if (response.status === 'success') {
+        // Save the account details to AsyncStorage
+        const accountDetails = {
+          account_number: accountNumber,
+          account_name: response.data.account_name,
+          bank_code: bankCode,
+          bank_name: response.data.bank_name,
+        };
 
-      try {
-        const result = JSON.parse(textResponse);
+        await AsyncStorage.setItem('savedAccount', JSON.stringify(accountDetails));
+        console.log("✅ Account Saved:", accountDetails);
 
-        if (result.status) {
-          // Save the account details to AsyncStorage
-          const accountDetails = {
-            account_number: accountNumber,
-            account_name: result.data?.account_name || "Unknown",
-          };
-
-          // Save to AsyncStorage
-          await AsyncStorage.setItem('savedAccount', JSON.stringify(accountDetails));
-          console.log("✅ Account Saved:", accountDetails);
-
-          // Set account name to display in modal
-          setAccountName(accountDetails.account_name);
-          setModalVisible(true);
-        } else {
-          Alert.alert('Error', result.message);
-        }
-      } catch (jsonError) {
-        console.error("⚠️ JSON Parse Error:", jsonError);
-        Alert.alert("Error", "Invalid response from the server.");
+        // Set account name to display in modal
+        setAccountName(response.data.account_name);
+        setModalVisible(true);
+      } else {
+        Alert.alert('Error', response.message || 'Account validation failed');
       }
     } catch (error) {
-      console.error("🚨 Fetch Error:", error);
-      Alert.alert('Error', 'Failed to connect to the server.');
+      console.error("🚨 Validation Error:", error);
+      Alert.alert('Error', error.message || 'Failed to validate account');
     } finally {
       setLoading(false);
     }

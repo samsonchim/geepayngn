@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,10 @@ import {
   FlatList,
   Dimensions,
   Animated,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import ApiService from './services/ApiService';
 
 const { width } = Dimensions.get('window');
 
@@ -17,65 +19,69 @@ const MainApp = ({ navigation }) => {
   const [isBalanceBlurred, setIsBalanceBlurred] = useState(false);
   const [blurValue] = useState(new Animated.Value(0));
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+  const [transactions, setTransactions] = useState([]);
+  const [user, setUser] = useState(null);
+  const [balance, setBalance] = useState('0.00');
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const transactions = [
-    {
-      id: '1',
-      name: 'Transfer to IBE JENIFER',
-      amount: '-₦1,200.00',
-      date: '20-01-2023, 06:00',
-      status: 'Completed',
-      type: 'outgoing',
-    },
-    {
-      id: '9',
-      name: 'Transfer to IBE JENIFER',
-      amount: '-₦1,200.00',
-      date: '20-01-2023, 06:00',
-      status: 'Completed',
-      type: 'outgoing',
-    },
-    {
-      id: '6',
-      name: 'Transfer to IBE JENIFER',
-      amount: '-₦1,200.00',
-      date: '20-01-2023, 06:00',
-      status: 'Completed',
-      type: 'outgoing',
-    },
-    {
-      id: '2',
-      name: 'Transfer From SAMSON CHIMARAOKE CHIZOR (OPAY)',
-      amount: '+₦800.00',
-      date: '20-01-2023, 06:00',
-      status: 'Completed',
-      type: 'incoming',
-    },
-    {
-      id: '12',
-      name: 'McDonald',
-      amount: '+₦800.00',
-      date: '20-01-2023, 06:00',
-      status: 'Completed',
-      type: 'incoming',
-    },
-    {
-      id: '02',
-      name: 'McDonald',
-      amount: '+₦800.00',
-      date: '20-01-2023, 06:00',
-      status: 'Completed',
-      type: 'incoming',
-    },
-    {
-      id: '3',
-      name: 'Netflix Subscription',
-      amount: '+₦1,500.00',
-      date: '20-01-2023, 06:00',
-      status: 'Completed',
-      type: 'incoming',
-    },
-  ];
+  const apiService = ApiService.getInstance();
+
+  useEffect(() => {
+    loadUserData();
+    loadTransactions();
+    loadNotificationCount();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const currentUser = apiService.getCurrentUser();
+      if (currentUser) {
+        setUser(currentUser);
+        setBalance(parseFloat(currentUser.account_balance).toFixed(2));
+      }
+
+      // Refresh balance from API
+      const balanceResponse = await apiService.getBalance();
+      if (balanceResponse.status === 'success') {
+        setBalance(parseFloat(balanceResponse.data.balance).toFixed(2));
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+  const loadTransactions = async () => {
+    try {
+      const response = await apiService.getTransactions(1, 10);
+      if (response.status === 'success') {
+        setTransactions(response.data);
+      }
+    } catch (error) {
+      console.error('Error loading transactions:', error);
+    }
+  };
+
+  const loadNotificationCount = async () => {
+    try {
+      const response = await apiService.getUnreadCount();
+      if (response.status === 'success') {
+        setUnreadCount(response.data.unread_count);
+      }
+    } catch (error) {
+      console.error('Error loading notification count:', error);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([
+      loadUserData(),
+      loadTransactions(),
+      loadNotificationCount()
+    ]);
+    setRefreshing(false);
+  };
 
   const toggleBalanceBlur = () => {
     const toValue = isBalanceBlurred ? 0 : 10; // Blur effect level (0 to 10)
@@ -102,14 +108,20 @@ const MainApp = ({ navigation }) => {
           />
           <View>
             <Text style={styles.greeting}>Hi, welcome</Text>
-            <Text style={styles.username}>Samson Chimaraoke</Text>
+            <Text style={styles.username}>
+              {user ? `${user.first_name} ${user.last_name}` : 'Loading...'}
+            </Text>
           </View>
         </View>
         <TouchableOpacity style={styles.notificationButton}>
           <Ionicons name="notifications-outline" size={24} color="#FFA500" />
-          <View style={styles.notificationBadge}>
-            <Text style={styles.notificationCount}>5</Text>
-          </View>
+          {unreadCount > 0 && (
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationCount}>
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -120,7 +132,7 @@ const MainApp = ({ navigation }) => {
           <TouchableOpacity onPress={toggleBalanceVisibility}>
             <Animated.View style={[styles.balanceContainer, { filter: `blur(${blurValue}px)` }]}>
               <Text style={styles.balance}>
-                {isBalanceVisible ? '₦800,656.60' : '******'}
+                {isBalanceVisible ? `₦${parseFloat(balance).toLocaleString()}` : '******'}
               </Text>
             </Animated.View>
           </TouchableOpacity>
@@ -165,6 +177,14 @@ const MainApp = ({ navigation }) => {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.transactionList}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#FFA500']}
+            tintColor="#FFA500"
+          />
+        }
         renderItem={({ item }) => (
           <View style={styles.transactionItem}>
             <Ionicons
@@ -182,6 +202,12 @@ const MainApp = ({ navigation }) => {
             >
               {item.amount}
             </Text>
+          </View>
+        )}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No transactions yet</Text>
+            <Text style={styles.emptySubText}>Your transactions will appear here</Text>
           </View>
         )}
       />
@@ -406,6 +432,22 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     marginTop: 5,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  emptySubText: {
+    color: '#BBBBBB',
+    fontSize: 14,
   },
 });
 export default MainApp;
