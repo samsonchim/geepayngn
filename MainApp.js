@@ -35,7 +35,7 @@ const MainApp = ({ navigation }) => {
 
   const loadUserData = async () => {
     try {
-      const currentUser = apiService.getCurrentUser();
+  const currentUser = await apiService.getCurrentUser();
       if (currentUser) {
         setUser(currentUser);
         setBalance(parseFloat(currentUser.account_balance).toFixed(2));
@@ -71,6 +71,33 @@ const MainApp = ({ navigation }) => {
     } catch (error) {
       console.error('Error loading notification count:', error);
     }
+  };
+
+  const handleTransactionPress = (item) => {
+    // Extract raw amount (prefer stored numeric)
+    const rawAmount = typeof item?.meta?.rawAmount === 'number'
+      ? item.meta.rawAmount
+      : (() => {
+          const isNegative = typeof item?.amount === 'string' && item.amount.trim().startsWith('-');
+          const num = parseFloat(String(item?.amount || '').replace(/[^\d.]/g, '')) || 0;
+          return isNegative ? -num : num;
+        })();
+
+    // Derive recipient name
+    let recipientName = item?.meta?.recipientName;
+    if (!recipientName && typeof item?.name === 'string') {
+      const m = item.name.match(/Transfer to\s+(.+)/i);
+      recipientName = m ? m[1] : item.name;
+    }
+
+    navigation.navigate('Success', {
+      amount: rawAmount,
+      recipientName: recipientName || 'N/A',
+      accountNumber: item?.meta?.accountNumber || 'N/A',
+      bankName: item?.meta?.bankName || 'N/A',
+      transactionId: item?.id,
+      timestamp: item?.meta?.rawDate || new Date().toISOString(),
+    });
   };
 
   const onRefresh = async () => {
@@ -186,23 +213,25 @@ const MainApp = ({ navigation }) => {
           />
         }
         renderItem={({ item }) => (
-          <View style={styles.transactionItem}>
-            <Ionicons
-              name={item.type === 'incoming' ? 'arrow-down-circle' : 'arrow-up-circle'}
-              size={30}
-              color={item.type === 'incoming' ? '#4CAF50' : '#FF3B30'}
-              style={styles.transactionIcon}
-            />
-            <View style={styles.transactionDetails}>
-              <Text style={styles.transactionName}>{item.name}</Text>
-              <Text style={styles.transactionDate}>{item.date}</Text>
+          <TouchableOpacity onPress={() => handleTransactionPress(item)}>
+            <View style={styles.transactionItem}>
+              <Ionicons
+                name={item.type === 'incoming' ? 'arrow-down-circle' : 'arrow-up-circle'}
+                size={30}
+                color={item.type === 'incoming' ? '#4CAF50' : '#FF3B30'}
+                style={styles.transactionIcon}
+              />
+              <View style={styles.transactionDetails}>
+                <Text style={styles.transactionName}>{item.name}</Text>
+                <Text style={styles.transactionDate}>{item.date}</Text>
+              </View>
+              <Text
+                style={[styles.transactionAmount, item.amount.startsWith('-') ? styles.expense : styles.income]}
+              >
+                {item.amount}
+              </Text>
             </View>
-            <Text
-              style={[styles.transactionAmount, item.amount.startsWith('-') ? styles.expense : styles.income]}
-            >
-              {item.amount}
-            </Text>
-          </View>
+          </TouchableOpacity>
         )}
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>

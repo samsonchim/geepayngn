@@ -7,7 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "sdkVersion": "53.0.0",
     "splash": {
       "image": "./assets/803.gif",
       "resizeMode": "contain",
@@ -20,10 +19,24 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.samsonchim.geepayngn",
+      "versionCode": 1,
+      "permissions": [
+        "INTERNET",
+        "SYSTEM_ALERT_WINDOW"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "0663dd86-0a98-4592-95e8-f98193a9dc6f"
+  },
+  "PAYSTACK_SECRET": "sk_test_dc7aa242ba21921d9997ca12a80fffefdd17e154",
+  "PAYSTACK_PUBLIC": "pk_test_0b8d27dd9b07aed5a917d639a77cec404aac7d87",
+  "FLUTTERWAVE_SECRET": ""
     }
   }
 }

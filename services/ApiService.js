@@ -1,17 +1,11 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const API_BASE_URL = 'http://localhost:3000/api'; // Change this to your server IP for testing on device
+import LocalDataService from './LocalDataService';
 
 class ApiService {
   static instance = null;
 
   constructor() {
-    if (ApiService.instance) {
-      return ApiService.instance;
-    }
-    ApiService.instance = this;
-    this.token = null;
-    this.user = null;
+    // No need for base URL anymore - everything is local
+    console.log('✅ ApiService initialized with Local Data Service');
   }
 
   static getInstance() {
@@ -21,231 +15,274 @@ class ApiService {
     return ApiService.instance;
   }
 
+  // Initialize from stored data
   async initializeFromStorage() {
     try {
-      const token = await AsyncStorage.getItem('authToken');
-      const userData = await AsyncStorage.getItem('userData');
-      
-      if (token) {
-        this.token = token;
-      }
-      
-      if (userData) {
-        this.user = JSON.parse(userData);
-      }
+      // Initialize LocalDataService
+      await LocalDataService.initializeData();
+      console.log('✅ ApiService initialized from storage');
     } catch (error) {
-      console.error('Error loading from storage:', error);
+      console.error('❌ Error initializing from storage:', error);
     }
   }
 
-  async saveToStorage() {
+  // Check if user is authenticated
+  isAuthenticated() {
+    return LocalDataService.isAuthenticated();
+  }
+
+  // Get current user
+  async getCurrentUser() {
     try {
-      if (this.token) {
-        await AsyncStorage.setItem('authToken', this.token);
+      const user = await LocalDataService.getUserData();
+      if (user) {
+        // Map LocalDataService field names to what MainApp expects
+        return {
+          ...user,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          account_balance: user.balance
+        };
       }
-      
-      if (this.user) {
-        await AsyncStorage.setItem('userData', JSON.stringify(this.user));
-      }
+      return null;
     } catch (error) {
-      console.error('Error saving to storage:', error);
+      console.error('Get current user error:', error);
+      return null;
     }
   }
 
-  async clearStorage() {
-    try {
-      await AsyncStorage.multiRemove(['authToken', 'userData']);
-      this.token = null;
-      this.user = null;
-    } catch (error) {
-      console.error('Error clearing storage:', error);
-    }
-  }
-
-  getHeaders() {
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
-    }
-
-    return headers;
-  }
-
-  async request(endpoint, options = {}) {
-    try {
-      const url = `${API_BASE_URL}${endpoint}`;
-      const config = {
-        headers: this.getHeaders(),
-        ...options,
-      };
-
-      if (config.body && typeof config.body === 'object') {
-        config.body = JSON.stringify(config.body);
-      }
-
-      const response = await fetch(url, config);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
-      }
-
-      return data;
-    } catch (error) {
-      console.error(`API Error (${endpoint}):`, error);
-      throw error;
-    }
-  }
-
-  // Authentication methods
+  // Authentication
   async login(email, password) {
-    const data = await this.request('/auth/login', {
-      method: 'POST',
-      body: { email, password },
-    });
-
-    if (data.status === 'success') {
-      this.token = data.data.token;
-      this.user = data.data.user;
-      await this.saveToStorage();
+    try {
+      const result = await LocalDataService.login(email, password);
+      return result;
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false, message: 'Login failed' };
     }
-
-    return data;
-  }
-
-  async register(userData) {
-    const data = await this.request('/auth/register', {
-      method: 'POST',
-      body: userData,
-    });
-
-    if (data.status === 'success') {
-      this.token = data.data.token;
-      this.user = data.data.user;
-      await this.saveToStorage();
-    }
-
-    return data;
   }
 
   async verifyPasscode(email, passcode) {
-    const data = await this.request('/auth/verify-passcode', {
-      method: 'POST',
-      body: { email, passcode },
-    });
-
-    if (data.status === 'success') {
-      this.token = data.data.token;
-      this.user = data.data.user;
-      await this.saveToStorage();
-    }
-
-    return data;
-  }
-
-  async logout() {
     try {
-      await this.request('/auth/logout', { method: 'POST' });
+      return await LocalDataService.verifyPasscode(email, passcode);
     } catch (error) {
-      console.warn('Logout request failed:', error);
+      console.error('Passcode verification error:', error);
+      return { status: 'error', message: 'Verification failed' };
     }
-    
-    await this.clearStorage();
   }
 
-  // Bank methods
-  async getBanks() {
-    return this.request('/banks');
-  }
-
-  async validateAccount(accountNumber, bankCode) {
-    return this.request('/banks/validate', {
-      method: 'POST',
-      body: { account_number: accountNumber, bank_code: bankCode },
-    });
-  }
-
-  // Transaction methods
-  async getTransactions(page = 1, limit = 20) {
-    return this.request(`/transactions?page=${page}&limit=${limit}`);
-  }
-
-  async externalTransfer(transferData) {
-    return this.request('/transactions/external', {
-      method: 'POST',
-      body: transferData,
-    });
-  }
-
-  async internalTransfer(transferData) {
-    return this.request('/transactions/internal', {
-      method: 'POST',
-      body: transferData,
-    });
-  }
-
-  // User methods
-  async getProfile() {
-    return this.request('/users/profile');
-  }
-
-  async updateProfile(profileData) {
-    return this.request('/users/profile', {
-      method: 'PUT',
-      body: profileData,
-    });
+  // User data
+  async getUserProfile() {
+    try {
+      const user = await LocalDataService.getUserData();
+      return user ? { success: true, user } : { success: false, message: 'User not found' };
+    } catch (error) {
+      console.error('Get user profile error:', error);
+      return { success: false, message: 'Failed to get user profile' };
+    }
   }
 
   async getBalance() {
-    const data = await this.request('/users/balance');
-    // Update local user data
-    if (data.status === 'success' && this.user) {
-      this.user.account_balance = data.data.balance;
-      await this.saveToStorage();
+    try {
+      const user = await LocalDataService.getUserData();
+      return { 
+        status: 'success', 
+        data: { 
+          balance: user ? user.balance : 0 
+        } 
+      };
+    } catch (error) {
+      console.error('Get balance error:', error);
+      return { 
+        status: 'error', 
+        data: { balance: 0 } 
+      };
     }
-    return data;
   }
 
-  async getStatistics() {
-    return this.request('/users/statistics');
+  // Transactions
+  async getUserTransactions() {
+    try {
+      const transactions = await LocalDataService.getTransactions();
+      return { success: true, transactions };
+    } catch (error) {
+      console.error('Get transactions error:', error);
+      return { success: false, message: 'Failed to get transactions' };
+    }
   }
 
-  async changePasscode(oldPasscode, newPasscode) {
-    return this.request('/users/passcode', {
-      method: 'PUT',
-      body: { old_passcode: oldPasscode, new_passcode: newPasscode },
-    });
+  async getTransactions() {
+    try {
+      const transactions = await LocalDataService.getTransactions();
+      // Format transactions to match expected format
+      const formattedTransactions = transactions.map(tx => ({
+        id: tx.id,
+        name: tx.type === 'transfer' ? tx.description : 
+              tx.type === 'credit' ? tx.description :
+              tx.type === 'debit' ? tx.description : 'Transaction',
+        amount: tx.type === 'credit' ? `+₦${tx.amount.toLocaleString()}` : `-₦${tx.amount.toLocaleString()}`,
+        date: new Date(tx.date).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }),
+        type: tx.type === 'credit' ? 'incoming' : 'outgoing',
+        // metadata for receipt
+        meta: {
+          recipientName: tx.recipientName,
+          accountNumber: tx.accountNumber,
+          bankName: tx.bankName,
+          rawDate: tx.date,
+          rawAmount: tx.amount,
+          description: tx.description,
+        }
+      }));
+      
+      return { 
+        status: 'success', 
+        data: formattedTransactions 
+      };
+    } catch (error) {
+      console.error('Get transactions error:', error);
+      return { 
+        status: 'error', 
+        data: [] 
+      };
+    }
   }
 
-  // Notification methods
-  async getNotifications(page = 1, limit = 20) {
-    return this.request(`/notifications?page=${page}&limit=${limit}`);
+  async transferMoney(amount, recipientName, description) {
+    try {
+      const result = await LocalDataService.transferMoney(amount, recipientName, description);
+      return result;
+    } catch (error) {
+      console.error('Transfer error:', error);
+      return { success: false, message: 'Transfer failed' };
+    }
+  }
+
+  // Account validation (mocked locally for prototype)
+  async validateAccount(accountNumber, bankCode) {
+    try {
+      // Get bank name from local banks list
+      const banks = await LocalDataService.getBanks();
+      const bank = banks.find(b => b.code === bankCode);
+
+      // Simple mock names for demo
+      const mockAccountNames = [
+        'ADAORA OKONKWO',
+        'EMEKA ADEBAYO', 
+        'KEMI WILLIAMS',
+        'TUNDE BALOGUN',
+        'BLESSING HASSAN',
+        'CHIDI OKORO'
+      ];
+      const randomName = mockAccountNames[Math.floor(Math.random() * mockAccountNames.length)];
+
+      // Simulate delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      return {
+        status: 'success',
+        data: {
+          account_number: accountNumber,
+          account_name: randomName,
+          bank_code: bankCode,
+          bank_name: bank ? bank.name : 'Unknown Bank'
+        }
+      };
+    } catch (error) {
+      console.error('Validate account error:', error);
+      return { status: 'error', message: 'Validation failed' };
+    }
+  }
+
+  // Banks
+  async getBanks() {
+    try {
+  const banks = await LocalDataService.getBanks();
+  return { success: true, banks };
+    } catch (error) {
+      console.error('Get banks error:', error);
+      return { success: false, banks: [] };
+    }
+  }
+
+  // Notifications  
+  async getNotifications() {
+    try {
+      const notifications = await LocalDataService.getNotifications();
+      return { success: true, notifications };
+    } catch (error) {
+      console.error('Get notifications error:', error);
+      return { success: false, notifications: [] };
+    }
   }
 
   async getUnreadCount() {
-    return this.request('/notifications/unread-count');
+    try {
+      const notifications = await LocalDataService.getNotifications();
+      const unreadCount = notifications.filter(n => !n.read).length;
+      return { 
+        status: 'success', 
+        data: { 
+          unread_count: unreadCount 
+        } 
+      };
+    } catch (error) {
+      console.error('Get unread count error:', error);
+      return { 
+        status: 'success', 
+        data: { unread_count: 0 } 
+      };
+    }
   }
 
   async markNotificationRead(notificationId) {
-    return this.request(`/notifications/${notificationId}/read`, {
-      method: 'PUT',
-    });
+    try {
+      const result = await LocalDataService.markNotificationRead(notificationId);
+      return { success: result };
+    } catch (error) {
+      console.error('Mark notification read error:', error);
+      return { success: false };
+    }
   }
 
-  // Utility methods
-  isAuthenticated() {
-    return !!this.token && !!this.user;
+  // External transfer API shim (prototype): uses local data, returns shape expected by Amount.js
+  async externalTransfer(transferData) {
+    try {
+      const { amount, account_name, account_number, bankName } = transferData;
+      const result = await LocalDataService.transferMoney(
+        amount,
+        account_name,
+        'External Transfer',
+        account_number,
+        bankName
+      );
+      if (result.success) {
+        return {
+          status: 'success',
+          data: {
+            transaction_id: result.transaction?.id || Date.now().toString(),
+          },
+        };
+      }
+      return { status: 'error', message: result.message || 'Transfer failed' };
+    } catch (error) {
+      console.error('External transfer error:', error);
+      return { status: 'error', message: 'Transfer failed' };
+    }
   }
 
-  getCurrentUser() {
-    return this.user;
-  }
-
-  getToken() {
-    return this.token;
+  // Utility
+  async resetApp() {
+    try {
+      await LocalDataService.resetToSampleData();
+      return { success: true, message: 'App reset to sample data' };
+    } catch (error) {
+      console.error('Reset app error:', error);
+      return { success: false, message: 'Failed to reset app' };
+    }
   }
 }
 

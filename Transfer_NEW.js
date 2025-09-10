@@ -16,7 +16,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ApiService from './services/ApiService';
-import { BankValidationService } from './services/BankValidationService';
 
 const Transfer = ({ navigation }) => {
   const [accountNumber, setAccountNumber] = useState('');
@@ -45,30 +44,12 @@ const Transfer = ({ navigation }) => {
 
   const loadBanks = async () => {
     try {
-      // First try live Paystack banks
-      const ps = await BankValidationService.getBanksFromPaystack();
-      const liveBanks = Array.isArray(ps?.data)
-        ? ps.data
-            .filter(b => b?.code && b?.name)
-            .map(b => ({ name: b.name, code: String(b.code), color: '#FFA500' }))
-        : [];
-      if (liveBanks.length > 0) {
-        setBanks(liveBanks);
-        return;
-      }
-
-      // Fallback to local curated banks
       const response = await apiService.getBanks();
       if (response.success) {
         setBanks(response.banks);
       }
     } catch (error) {
       console.error('Failed to load banks:', error);
-      // Final fallback to local banks
-      try {
-        const response = await apiService.getBanks();
-        if (response.success) setBanks(response.banks);
-      } catch {}
     }
   };
 
@@ -84,7 +65,6 @@ const Transfer = ({ navigation }) => {
     setSearchQuery('');
   };
 
-  // Function to validate account and save account details
   const validateAccount = async () => {
     if (!accountNumber || !bankCode) {
       Alert.alert('Error', 'Please fill in all fields');
@@ -99,57 +79,36 @@ const Transfer = ({ navigation }) => {
     setLoading(true);
 
     try {
-      // Try Paystack first
-      const ps = await BankValidationService.validateAccountPaystack(accountNumber, bankCode);
-      let account_name = '';
-      let bank_name = selectedBank?.name || '';
-
-      if (ps && ps.status && ps.data?.account_name) {
-        account_name = ps.data.account_name;
-      } else {
-        // Fallback to Flutterwave
-        const fw = await BankValidationService.validateAccountFlutterwave(accountNumber, bankCode);
-        if ((fw?.status === 'success' || fw?.status === 'success') && fw?.data?.account_name) {
-          account_name = fw.data.account_name;
-        } else if (fw?.data?.account_name) {
-          account_name = fw.data.account_name;
-        }
-      }
-
-      if (!account_name) {
-        const msg = ps?.message || ps?.data?.message || 'Unable to validate account';
-        Alert.alert('Validation Failed', msg);
-        return;
-      }
+      // Mock account validation for demo
+      const mockAccountNames = [
+        'ADAORA OKONKWO',
+        'EMEKA ADEBAYO', 
+        'KEMI WILLIAMS',
+        'TUNDE BALOGUN',
+        'BLESSING HASSAN',
+        'CHIDI OKORO'
+      ];
+      
+      const randomName = mockAccountNames[Math.floor(Math.random() * mockAccountNames.length)];
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       const accountDetails = {
         account_number: accountNumber,
-        account_name,
+        account_name: randomName,
         bank_code: bankCode,
-        bank_name,
+        bank_name: selectedBank?.name,
       };
 
       await AsyncStorage.setItem('savedAccount', JSON.stringify(accountDetails));
-      setAccountName(account_name);
+      setAccountName(randomName);
       setModalVisible(true);
+
     } catch (error) {
-      console.error('🚨 Validation Error:', error);
-      Alert.alert('Error', error.message || 'Failed to validate account');
+      Alert.alert('Error', 'Failed to validate account');
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Function to retrieve saved account details from AsyncStorage
-  const getSavedAccount = async () => {
-    try {
-      const savedData = await AsyncStorage.getItem('savedAccount');
-      if (savedData) {
-        console.log("📦 Retrieved Account:", JSON.parse(savedData));
-        return JSON.parse(savedData);
-      }
-    } catch (error) {
-      console.error("⚠️ Error retrieving account:", error);
     }
   };
 
@@ -255,9 +214,6 @@ const Transfer = ({ navigation }) => {
           >
             {loading ? (
               <View style={styles.loadingContainer}>
-                <Animated.View style={[styles.loadingDot, styles.loadingDot1]} />
-                <Animated.View style={[styles.loadingDot, styles.loadingDot2]} />
-                <Animated.View style={[styles.loadingDot, styles.loadingDot3]} />
                 <Text style={styles.loadingText}>Verifying...</Text>
               </View>
             ) : (
@@ -567,16 +523,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 12,
   },
-  loadingDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#fff',
-    marginHorizontal: 2,
-  },
-  loadingDot1: { opacity: 0.7 },
-  loadingDot2: { opacity: 0.5 },
-  loadingDot3: { opacity: 0.3 },
   securityNotice: {
     flexDirection: 'row',
     alignItems: 'center',

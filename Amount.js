@@ -57,6 +57,7 @@ const Amount = ({ navigation }) => {
       amount: parseFloat(amount),
       description: `Transfer to ${accountName}`,
       passcode: passcode,
+      bankName: bankName,
     };
 
     console.log("🔍 Transfer Data:", transferData);
@@ -76,8 +77,10 @@ const Amount = ({ navigation }) => {
               navigation.navigate('Success', {
                 amount: amount,
                 recipientName: accountName,
+                accountNumber: accountNumber,
                 bankName: bankName,
-                transactionId: response.data.transaction_id
+                transactionId: response.data.transaction_id,
+                timestamp: new Date().toISOString()
               });
             }
           }
