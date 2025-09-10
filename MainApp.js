@@ -97,6 +97,7 @@ const MainApp = ({ navigation }) => {
       bankName: item?.meta?.bankName || 'N/A',
       transactionId: item?.id,
       timestamp: item?.meta?.rawDate || new Date().toISOString(),
+      direction: item?.type === 'incoming' ? 'incoming' : 'outgoing',
     });
   };
 
@@ -180,7 +181,7 @@ const MainApp = ({ navigation }) => {
             <Text style={styles.actionButtonText}>Transfer</Text>
           </TouchableOpacity>
           <View style={styles.divider} />
-          <TouchableOpacity style={styles.requestButton}>
+          <TouchableOpacity style={styles.requestButton} onPress={() => navigation.navigate('Request')}>
             <Ionicons name="arrow-down-circle-outline" size={18} color="#fff" />
             <Text style={styles.actionButtonText}>Request</Text>
           </TouchableOpacity>

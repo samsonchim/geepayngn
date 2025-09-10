@@ -5,7 +5,7 @@ import ViewShot from 'react-native-view-shot';
 import * as MediaLibrary from 'expo-media-library';
 
 const Success = ({ route, navigation }) => {
-  const { recipientName, accountNumber, bankName, amount, transactionId, timestamp } = route.params;
+  const { recipientName, accountNumber, bankName, amount, transactionId, timestamp, direction } = route.params;
   const viewRef = useRef(null);
   const [saving, setSaving] = useState(false);
 
@@ -32,13 +32,15 @@ const Success = ({ route, navigation }) => {
     }
   };
 
+  const isIncoming = direction === 'incoming';
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.navigate('MainApp')}>
           <Ionicons name="home" size={22} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.header}>Transfer Successful</Text>
+        <Text style={styles.header}>{isIncoming ? 'Money Received' : 'Transfer Successful'}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -50,7 +52,7 @@ const Success = ({ route, navigation }) => {
           </View>
 
           <View style={styles.rowBetween}>
-            <Text style={styles.label}>Recipient</Text>
+            <Text style={styles.label}>{isIncoming ? 'Sender' : 'Recipient'}</Text>
             <Text style={styles.value}>{recipientName}</Text>
           </View>
           <View style={styles.divider} />

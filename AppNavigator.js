@@ -6,6 +6,7 @@ import MainApp from './MainApp';
 import Transfer from './Transfer';
 import Amount from './Amount';
 import Success from './Success';
+import Request from './Request';
 
 const Stack = createStackNavigator();
 
@@ -38,6 +39,11 @@ const AppNavigator = () => {
           component={Success}
           options={{ headerShown: false }}
         />
+          <Stack.Screen
+            name="Request"
+            component={Request}
+            options={{ headerShown: false }}
+          />
       </Stack.Navigator>
     </NavigationContainer>
   );

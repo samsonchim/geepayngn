@@ -45,19 +45,27 @@ const Transfer = ({ navigation }) => {
 
   const loadBanks = async () => {
     try {
-      // First try live Paystack banks
-      const ps = await BankValidationService.getBanksFromPaystack();
-      const liveBanks = Array.isArray(ps?.data)
-        ? ps.data
-            .filter(b => b?.code && b?.name)
-            .map(b => ({ name: b.name, code: String(b.code), color: '#FFA500' }))
-        : [];
-      if (liveBanks.length > 0) {
-        setBanks(liveBanks);
+      // Use Flutterwave to get banks for consistency
+      console.log('🏦 Loading banks from Flutterwave...');
+      const fw = await BankValidationService.getBanksFromFlutterwave();
+      
+      if (fw?.status === 'success' && Array.isArray(fw?.data)) {
+        const flutterwaveBanks = fw.data
+          .filter(b => b?.code && b?.name)
+          .map(b => ({ 
+            name: b.name, 
+            code: String(b.code), 
+            color: '#FFA500' 
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
+        
+        console.log(`✅ Loaded ${flutterwaveBanks.length} banks from Flutterwave`);
+        setBanks(flutterwaveBanks);
         return;
       }
 
-      // Fallback to local curated banks
+      // Fallback to local curated banks if Flutterwave fails
+      console.log('⚠️ Flutterwave banks failed, using local banks');
       const response = await apiService.getBanks();
       if (response.success) {
         setBanks(response.banks);
@@ -99,25 +107,40 @@ const Transfer = ({ navigation }) => {
     setLoading(true);
 
     try {
-      // Try Paystack first
-      const ps = await BankValidationService.validateAccountPaystack(accountNumber, bankCode);
+      console.log(`🔍 Validating account ${accountNumber} with bank code ${bankCode} using Flutterwave...`);
+      
+      // Use Flutterwave for validation since we got the bank codes from Flutterwave
+      const fw = await BankValidationService.validateAccountFlutterwave(accountNumber, bankCode);
       let account_name = '';
       let bank_name = selectedBank?.name || '';
 
-      if (ps && ps.status && ps.data?.account_name) {
-        account_name = ps.data.account_name;
+      if (fw?.status === 'success' && fw?.data?.account_name) {
+        account_name = fw.data.account_name;
+        bank_name = fw.data.bank_name || bank_name;
+        console.log(`✅ Flutterwave validation successful: ${account_name}`);
       } else {
-        // Fallback to Flutterwave
-        const fw = await BankValidationService.validateAccountFlutterwave(accountNumber, bankCode);
-        if ((fw?.status === 'success' || fw?.status === 'success') && fw?.data?.account_name) {
-          account_name = fw.data.account_name;
-        } else if (fw?.data?.account_name) {
-          account_name = fw.data.account_name;
+        console.log('❌ Flutterwave validation failed:', fw?.message || 'Unknown error');
+        
+        // Only fallback to other services if Flutterwave explicitly fails
+        console.log('🔄 Trying Nubapi as fallback...');
+        const nu = await BankValidationService.validateAccountNubapi(accountNumber, bankCode);
+        if (nu?.account_name) {
+          account_name = nu.account_name;
+          console.log(`✅ Nubapi validation successful: ${account_name}`);
+        } else if (nu?.data?.account_name) {
+          account_name = nu.data.account_name;
+          console.log(`✅ Nubapi validation successful: ${account_name}`);
+        } else if (nu?.first_name || nu?.last_name) {
+          account_name = [nu?.first_name, nu?.last_name].filter(Boolean).join(' ').trim();
+          console.log(`✅ Nubapi validation successful: ${account_name}`);
+        } else if (nu?.data?.first_name || nu?.data?.last_name) {
+          account_name = [nu?.data?.first_name, nu?.data?.last_name].filter(Boolean).join(' ').trim();
+          console.log(`✅ Nubapi validation successful: ${account_name}`);
         }
       }
 
       if (!account_name) {
-        const msg = ps?.message || ps?.data?.message || 'Unable to validate account';
+        const msg = fw?.message || fw?.data?.message || 'Unable to validate account. Please check the account number and try again.';
         Alert.alert('Validation Failed', msg);
         return;
       }
@@ -132,7 +155,7 @@ const Transfer = ({ navigation }) => {
       await AsyncStorage.setItem('savedAccount', JSON.stringify(accountDetails));
       setAccountName(account_name);
       setModalVisible(true);
-    } catch (error) {
+  } catch (error) {
       console.error('🚨 Validation Error:', error);
       Alert.alert('Error', error.message || 'Failed to validate account');
     } finally {
@@ -344,7 +367,12 @@ const Transfer = ({ navigation }) => {
                 style={styles.proceedButton}
                 onPress={() => {
                   setModalVisible(false);
-                  navigation.navigate('Amount'); 
+                  navigation.navigate('Amount', {
+                    bankName: selectedBank?.name || 'Unknown Bank',
+                    bankCode: bankCode,
+                    accountNumber: accountNumber,
+                    accountName: accountName // Use state variable instead of local variable
+                  }); 
                 }}
               >
                 <Text style={styles.proceedButtonText}>Proceed to Amount</Text>

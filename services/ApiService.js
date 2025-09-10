@@ -161,38 +161,54 @@ class ApiService {
     }
   }
 
-  // Account validation (mocked locally for prototype)
+  async receiveMoney(amount, senderName, description) {
+    try {
+      return await LocalDataService.receiveMoney(amount, senderName, description);
+    } catch (error) {
+      console.error('Receive money error:', error);
+      return { success: false, message: 'Failed to credit account' };
+    }
+  }
+
+  // Account validation using Flutterwave API (real-time)
   async validateAccount(accountNumber, bankCode) {
     try {
-      // Get bank name from local banks list
-      const banks = await LocalDataService.getBanks();
-      const bank = banks.find(b => b.code === bankCode);
+      // Import BankValidationService dynamically to avoid circular imports
+      const { BankValidationService } = await import('./BankValidationService');
+      
+      // Use real Flutterwave validation
+      console.log('🔍 ApiService: Validating account via Flutterwave...');
+      const result = await BankValidationService.validateAccountFlutterwave(accountNumber, bankCode);
 
-      // Simple mock names for demo
-      const mockAccountNames = [
-        'ADAORA OKONKWO',
-        'EMEKA ADEBAYO', 
-        'KEMI WILLIAMS',
-        'TUNDE BALOGUN',
-        'BLESSING HASSAN',
-        'CHIDI OKORO'
-      ];
-      const randomName = mockAccountNames[Math.floor(Math.random() * mockAccountNames.length)];
-
-      // Simulate delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      return {
-        status: 'success',
-        data: {
-          account_number: accountNumber,
-          account_name: randomName,
-          bank_code: bankCode,
-          bank_name: bank ? bank.name : 'Unknown Bank'
-        }
-      };
+      if (result.status === 'success' && result.data) {
+        console.log('✅ ApiService: Real validation successful');
+        return {
+          status: 'success',
+          data: {
+            account_number: result.data.account_number || accountNumber,
+            account_name: result.data.account_name || 'UNKNOWN',
+            bank_code: bankCode,
+            bank_name: result.data.bank_name || 'Unknown Bank'
+          }
+        };
+      } else {
+        console.log('❌ ApiService: Validation failed, falling back to local data');
+        // Fallback to get bank name from local banks list
+        const banks = await LocalDataService.getBanks();
+        const bank = banks.find(b => b.code === bankCode);
+        
+        return {
+          status: 'error',
+          message: result.message || 'Account validation failed',
+          data: {
+            account_number: accountNumber,
+            bank_code: bankCode,
+            bank_name: bank ? bank.name : 'Unknown Bank'
+          }
+        };
+      }
     } catch (error) {
-      console.error('Validate account error:', error);
+      console.error('❌ ApiService validate account error:', error);
       return { status: 'error', message: 'Validation failed' };
     }
   }

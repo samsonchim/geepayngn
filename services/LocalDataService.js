@@ -20,6 +20,20 @@ class LocalDataService {
       const userData = await AsyncStorage.getItem(this.STORAGE_KEYS.USER_DATA);
       if (!userData) {
         await this.createSampleData();
+      } else {
+        // Ensure stored profile matches requested defaults (name + PIN)
+        try {
+          const user = JSON.parse(userData);
+          let changed = false;
+          if (user.firstName !== 'Samson') { user.firstName = 'Samson'; changed = true; }
+          if (user.lastName !== 'Chimaraoke') { user.lastName = 'Chimaraoke'; changed = true; }
+          if (user.passcode !== '1311') { user.passcode = '1311'; changed = true; }
+          if (changed) {
+            await AsyncStorage.setItem(this.STORAGE_KEYS.USER_DATA, JSON.stringify(user));
+          }
+        } catch (e) {
+          console.warn('Could not normalize stored user profile:', e?.message);
+        }
       }
     } catch (error) {
       console.error('Error initializing data:', error);
@@ -36,7 +50,7 @@ class LocalDataService {
       lastName: 'Chimaraoke',
       balance: 800656.60,
       accountNumber: '1234567890',
-      passcode: '1234',
+  passcode: '1311',
       createdAt: new Date().toISOString()
     };
 
@@ -255,6 +269,35 @@ class LocalDataService {
     }
   }
 
+  // Receive money (credit)
+  async receiveMoney(amount, senderName, description) {
+    try {
+      const user = await this.getUserData();
+      if (!user) return { success: false, message: 'User not found' };
+
+      const newBalance = (user.balance || 0) + amount;
+      await this.updateUserBalance(newBalance);
+
+      const transaction = await this.addTransaction({
+        userId: user.id,
+        type: 'credit',
+        amount: amount,
+        description: description || `Transfer from ${senderName}`,
+        recipientName: senderName,
+      });
+
+      await this.addNotification({
+        title: 'Money Received',
+        message: `₦${amount.toLocaleString()} received from ${senderName}`,
+        type: 'transaction',
+      });
+
+      return { success: true, transaction, newBalance };
+    } catch (e) {
+      return { success: false, message: 'Failed to credit account' };
+    }
+  }
+
   // Banks
   async getBanks() {
     try {
@@ -348,9 +391,9 @@ class LocalDataService {
       return {
         id: 1,
         email: 'samson@geepayngn.com',
-        name: 'Samson Chimaraoke Chizor',
+  name: 'Samson Chimaraoke',
         balance: 800656.60,
-        passcode: '1234'
+  passcode: '1311'
       };
     } catch (error) {
       console.error('Error getting current user:', error);
